@@ -1,0 +1,16 @@
+[freeipa_masters]
+master1.ipa.example
+
+[freeipa_clients]
+aker.ipa.example
+web1.ipa.example
+web2.ipa.example
+db1.ipa.example
+db2.ipa.example
+
+[aker_servers]
+aker.ipa.example
+
+[db_servers]
+db1.ipa.example
+db2.ipa.example

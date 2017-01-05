@@ -1,0 +1,16 @@
+git_branch: phase0-freeipa
+
+# User that doesn't have aker shell forced to it, should have sudo access.
+aker_admin_user: vagrant
+
+akerserver_packages:
+  - git-core
+  - python2-paramiko
+  - python2-configparser
+  - python-urwid
+
+# Add sample rules and users to FreeIPA
+aker_load_sample_env: True
+
+# allow PasswordAuthentication in sshd_config , just for vagrant test env.
+aker_password_auth: True

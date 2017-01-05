@@ -1,0 +1,266 @@
+- name:  Create Linux Admins usergroup
+  ipa:
+    args="group-add --desc="Linux Admins" linuxadmins"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+- name:  Create auto membership rule to Linux admins Group
+  ipa:
+    args=" automember-add --type=group linuxadmins"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+- name:  Add condition to automembership to usergroup Linux Admins
+  ipa:
+    args=" automember-add-condition --type=group --key=departmentnumber --inclusive-regex=^lnxadmins$ linuxadmins"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+- name:  Create user in linux admin department
+  ipa:
+    args=" user-add anazmy --first=Ahmed --last=Nazmy --setattr=departmentnumber=lnxadmins"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+  
+
+- name:  Generate sshkey for anazmy
+#TRYYYYYY  - name: Generating RSA key for root
+  user: name=anazmy generate_ssh_key=yes
+#- name: sudo -H -u anazmy bash -c 'ssh-keygen -N "" -f /home/anazmy/.ssh/id_rsa'
+
+- name: get anazmy id_rsa.pub
+shell: cat /home/anazmy/.ssh/id_rsa
+register: anazmy_id_rsa_pub
+changed_when: false
+
+
+
+ip: user-mod anazmy --sshpubkey="{{ anazmy_id_rsa_pub.stdout }}"
+
+- name:  Create DB Admins usergroup
+  ipa:
+    args=" group-add --desc="DB Admins" dbadmins"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Create auto membership rule to DB admins Group
+  ipa:
+    args=" automember-add --type=group dbadmins"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add condition to automembership to usergroup DB Admins
+  ipa:
+  args=" automember-add-condition --type=group --key=departmentnumber --inclusive-regex=^dbadmins$ dbadmins"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Create user in DB admin department
+  ipa:
+    args=" user-add jsmith --first=John --last=Smith --setattr=departmentnumber=dbadmins
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Generate sshkey for jsmith 
+#TRYYYYYY  - name: Generating RSA key for root
+  user: name=jsmith generate_ssh_key=yes
+#- name:  sudo -H -u jsmith bash -c 'ssh-keygen -N "" -f /home/jsmith/.ssh/id_rsa'
+
+
+
+- name: Disable HBAC allow_all
+  ipa:
+    args=" hbacrule-disable allow_all"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Create Hostgroup Linux Servers
+  ipa:
+    args=" hostgroup-add --desc="Linux Servers" linuxservers"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add all machines to Linux servers Host group
+  ipa:
+    args=" hostgroup-add-member linuxservers --hosts={{ item }}"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  with_items: '{{ groups.freeipa_clients }}'
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Create Hostgroup DB Servers
+  ipa:
+   args=" hostgroup-add --desc="DB Servers" dbservers"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+- name:  Add DB machines to DB servers Host group
+  ipa:
+    args=" hostgroup-add-member dbservers --hosts=db1.ipa.example,db2.ipa.example"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+
+- name:  Define Linux admins HBAC rule
+  ipa:
+    args=" hbacrule-add --desc="HBAC rule for linuxadmins user group" lnx_admins_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add Linux admins group to HBAC rule
+  ipa:
+    args=" hbacrule-add-user --groups linuxadmins lnx_admins_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add the sshd service to the HBAC rule
+  ipa:
+    args=" hbacrule-add-service --hbacsvcs sshd lnx_admins_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add the host group to the HBAC rule
+  ipa:
+    args=" hbacrule-add-host --hostgroups linuxservers lnx_admins_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+
+
+
+
+
+- name:  Define DB admins HBAC rule
+  ipa:
+    args=" hbacrule-add --desc="HBAC rule for dbadmins user group" db_admins_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add DB admins group to HBAC rule
+  ipa:
+    args=" hbacrule-add-user --groups dbadmins db_admins_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add the sshd service to the HBAC rule
+  ipa:
+    args=" hbacrule-add-service --hbacsvcs sshd db_admins_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add the host group to the HBAC rule
+  ipa:
+    args=" hbacrule-add-host --hostgroups dbservers db_admins_hbac
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+
+
+
+- name:  Define Aker hosts HBAC rule
+  ipa:
+    args=" hbacrule-add --usercat=all --desc="HBAC rule for Aker hostgroup" aker_hosts_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add the sshd service to the HBAC rule
+  ipa:
+    args=" hbacrule-add-service --hbacsvcs sshd aker_hosts_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name:  Add aker host group to the HBAC rule
+  ipa:
+    args=" hbacrule-add-host --hostgroups gateways aker_hosts_hbac"
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+

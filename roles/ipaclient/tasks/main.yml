@@ -1,0 +1,33 @@
+---
+
+- name: Install FreeIPA client packages (yum)
+  package: name={{ item }} state=present
+  with_items: "{{ ipaclient_packages }}"
+  when: ansible_distribution == "Fedora" 
+
+- name: Install FreeIPA client packages (yum/ Centos)
+  package: name={{ item }} state=present
+  with_items: "{{ centos_ipaclient_packages }}"
+  when: ansible_distribution == "CentOS" 
+
+- name: Install FreeIPA client packages (apt-get)
+  apt: name={{ item }} state=present update_cache=yes
+  with_items: "{{ ubuntu_ipaclient_packages }}"
+  when: ansible_distribution == "Ubuntu"
+
+- name: Add server to FreeIPA domain
+  command: >
+    ipa-client-install -U
+    --realm {{ ipaserver_realm }}
+    --domain {{ ipaserver_domain }}
+    --principal admin
+    --password {{ ipaserver_admin_password }}
+    --force-join
+    --mkhomedir
+    --ssh-trust-dns
+    --enable-dns-updates
+    --server={{ groups['freeipa_masters'][0] }}
+  args:
+    creates: /etc/ipa/default.conf
+
+

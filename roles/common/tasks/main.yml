@@ -1,0 +1,36 @@
+---
+
+- name: Check if Haveged Service Exists
+  stat: path=/usr/lib/systemd/system/haveged.service
+  register: haveged_status
+
+- name: Start Haveged Service
+  service: name=haveged state=restarted enabled=yes
+  when: haveged_status.stat.exists
+  register: haveged_started
+
+- name: Install python bindings for SE Linux
+  package: name={{ item }} state=present
+  with_items:
+   - libselinux-python
+   - libsemanage-python
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure chrony package is absent
+  package: name=chrony state=absent
+
+- name: Install ntp 
+  package: name=ntp state=latest
+
+- name: Add dns resolver
+  lineinfile: dest=/etc/resolv.conf state=present line="nameserver {{ ipaserver_dns_forwarder }}" insertbefore=BOF  
+
+#- name: Get nmcli device info
+  #shell:
+    #"nmcli -t -f GENERAL.CONNECTION device show {{ ansible_default_ipv4.interface }} | awk -F: '{print $2}'"
+  #register: result
+  #changed_when: false
+
+#- name: Set nmcli device info fact
+  #set_fact: nm_conn="'{{ result.stdout_lines[0] }}'"
+

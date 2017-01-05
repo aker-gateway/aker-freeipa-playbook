@@ -1,0 +1,45 @@
+ipaserver_base_command: ipa-server-install -U 
+ipaserver_configure_ssh: True
+ipaserver_configure_sshd: True
+
+# IP of DNS server that will go in /etc/resolv.conf
+ipaserver_dns_forwarder: 192.168.122.1
+
+ipaserver_domain: ipa.example
+ipaserver_hbac_allow: True
+ipaserver_idstart: 5000
+ipaserver_idmax: False
+ipaserver_mkhomedir: True
+
+ipaserver_packages:
+  - ipa-server
+  - bind
+  - bind-dyndb-ldap
+  - freeipa-server-dns
+
+ipaclient_packages:
+  - freeipa-client
+
+#Lame but CentOS have ipa-server instead of freeipa
+centos_ipaserver_packages:
+  - ipa-server
+  - bind
+  - bind-dyndb-ldap
+  - ipa-server-dns
+centos_ipaclient_packages:
+  - ipa-client
+
+ubuntu_ipaclient_packages:
+  - freeipa-client
+  - sssd-tools
+ipaserver_realm: "{{ ipaserver_domain | upper }}"
+ipaserver_setup_dns: True
+ipaserver_setup_ntp: True
+ipaserver_ssh_trust_dns: True
+ipaserver_ui_redirect: True
+ipaserver_manage_firewalld: True
+ipaserver_dir_admin_password: Secret123
+ipaserver_admin_password: Secret123
+
+# FreeIPA hostgroup of Aker servers
+aker_hostgroup: gateways

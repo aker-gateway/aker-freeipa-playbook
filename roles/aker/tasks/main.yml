@@ -1,0 +1,90 @@
+---
+- name: Install Aker dependencies (yum)
+  yum: name={{ item }} state=present
+  with_items: "{{ akerserver_packages }}"
+  when: ansible_distribution == "CentOS" or
+        (ansible_distribution == "Fedora" and ansible_distribution_version|int <= 21)
+
+- name: Install Aker dependencies (dnf)
+  dnf: name={{ item }} state=present
+  with_items: "{{ akerserver_packages }}"
+  when: ansible_distribution == "Fedora" and ansible_distribution_version|int > 21
+
+
+
+- name: clean existing Aker files
+  file: path=/bin/aker state=absent
+
+- name: Clone Aker git repo
+  git:
+    repo: https://github.com/aker-gateway/Aker.git
+    dest: /bin/aker
+    version: "{{ git_branch }}"
+
+
+- name: Copy Aker config
+  copy: remote_src=True src=/bin/aker/aker.ini dest=/etc/aker.ini
+
+- name: Change aker.py attributes
+  file:
+    path: /bin/aker/aker.py
+    owner: root
+    group: root
+    mode: 0755
+
+
+# Lame 
+- name: Change aker.py attributes
+  file:
+    path: /var/log/aker.log
+    owner: root
+    group: root
+    mode: 0777
+    state: touch
+
+- name: Add Aker hostgroup {{ aker_hostgroup }} to FreeIPA
+  ipa:
+    args='hostgroup-add --desc="Aker Hostgroup" {{ aker_hostgroup }}'
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name: Add Aker servers to {{ aker_hostgroup }} FreeIPA hostgroup
+  ipa:
+    args='hostgroup-add-member {{ aker_hostgroup }} --hosts={{ ansible_fqdn }}'
+    password="{{ ipaserver_admin_password }}"
+    ignore_no_modifications=true
+    ignore_already_exists=true
+  delegate_to: "{{ groups['freeipa_masters'][0] }}"
+  ignore_errors: True
+
+
+- name: Configure hostgroup {{ aker_hostgroup }} in /etc/aker.ini
+  lineinfile:
+    dest: /etc/aker.ini
+    regexp: '^gateway_group ='
+    line: 'gateway_group = {{ aker_hostgroup }}'
+    
+- name: Allow PasswordAuthentication in sshd_config
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication'
+    line: 'PasswordAuthentication yes'
+
+- name: force Aker in sshd_config except for vagrant
+  blockinfile:
+    dest: /etc/ssh/sshd_config
+    marker: "# {mark} Aker {{ aker_admin_user }} Block"
+    block: |
+        Match User *,!{{ aker_admin_user }}
+        ForceCommand /bin/aker/aker.py
+    
+- name: Restart sshd
+  service: name=sshd state=restarted
+
+    
+- include: sample_env.yml
+  when: aker_load_sample_env
