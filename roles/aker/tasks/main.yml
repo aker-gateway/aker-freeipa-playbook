@@ -2,7 +2,7 @@
 - name: Install Aker dependencies (yum)
   yum: name={{ item }} state=present
   with_items: "{{ akerserver_packages }}"
-  when: ansible_distribution == "CentOS" or
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or
         (ansible_distribution == "Fedora" and ansible_distribution_version|int <= 21)
 
 - name: Install Aker dependencies (dnf)
@@ -33,10 +33,24 @@
     mode: 0755
 
 
-# Lame 
-- name: Change aker.py attributes
+- name: Change akerctl.py attributes
   file:
-    path: /var/log/aker.log
+    path: /bin/aker/akerctl.py
+    owner: root
+    group: root
+    mode: 0755
+    
+    
+- name: create Aker log dir
+  file:
+    path: /var/log/aker/
+    state: directory
+    mode: 0777
+
+# Lame
+- name: Change aker.log attributes
+  file:
+    path: /var/log/aker/aker.log
     owner: root
     group: root
     mode: 0777

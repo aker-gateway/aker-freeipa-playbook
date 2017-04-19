@@ -10,7 +10,7 @@ Vagrant.configure("2") do |config|
   config.vm.define :aker do |aker_config|
       aker_config.vm.box = "anazmy/freeipa-client"
       aker_config.vm.hostname = "aker.#{DOMAIN}"
-      aker_config.vm.network :private_network, :ip => "192.168.122.10"
+      aker_config.vm.network "private_network", ip: "192.168.122.10", auto_config: "false"
       aker_config.vm.provider "libvirt" do |libvirt|
       aker_config.vm.synced_folder ".", "/vagrant", disabled: true
         libvirt.memory = 512
@@ -26,7 +26,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "master1" do |node|
         node.vm.box = "anazmy/freeipa-server"
         node.vm.hostname = "master1.#{DOMAIN}"
-        node.vm.network :private_network, ip: "192.168.122.21"
+        node.vm.network "private_network", ip: "192.168.122.21", auto_config: "false"
         node.vm.synced_folder ".", "/vagrant", disabled: true
         node.vm.provider "libvirt" do |libvirt|
           libvirt.memory = 1536
@@ -43,7 +43,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "web#{i}" do |node|
         node.vm.box = "anazmy/freeipa-client"
         node.vm.hostname = "web#{i}.#{DOMAIN}"
-        node.vm.network :private_network, ip: "192.168.122.3#{i}"
+        node.vm.network "private_network", ip: "192.168.122.3#{i}", auto_config: "false"
         node.vm.synced_folder ".", "/vagrant", disabled: true
         node.vm.provider "libvirt" do |libvirt|
           libvirt.memory = 512
@@ -60,7 +60,7 @@ Vagrant.configure("2") do |config|
   config.vm.define :db1 do |db1_config|
       db1_config.vm.box = "viniciusfs/centos6"
       db1_config.vm.hostname = "db1.#{DOMAIN}"
-      db1_config.vm.network :private_network, :ip => "192.168.122.41"
+      db1_config.vm.network "private_network", ip: "192.168.122.41", auto_config: "false"
       db1_config.vm.provider "libvirt" do |libvirt|
       db1_config.vm.synced_folder ".", "/vagrant", disabled: true
         libvirt.memory = 512
@@ -72,9 +72,10 @@ Vagrant.configure("2") do |config|
   
     # create node 
   config.vm.define :db2 do |db2_config|	
-      db2_config.vm.box = "sylvainjoyeux/ubuntu-16.04-x86_64"
+      #db2_config.vm.box = "sylvainjoyeux/ubuntu-16.04-x86_64"
+      db2_config.vm.box = "anazmy/freeipa-client"
       db2_config.vm.hostname = "db2.#{DOMAIN}"
-      db2_config.vm.network :private_network, :ip => "192.168.122.42"
+      db2_config.vm.network "private_network", ip: "192.168.122.42", auto_config: "false"
       db2_config.vm.provider "libvirt" do |libvirt|
       db2_config.vm.synced_folder ".", "/vagrant", disabled: true
         libvirt.memory = 512

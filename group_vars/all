@@ -3,9 +3,11 @@ ipaserver_configure_ssh: True
 ipaserver_configure_sshd: True
 
 # IP of DNS server that will go in /etc/resolv.conf
-ipaserver_dns_forwarder: 192.168.122.1
+#ipaserver_dns_forwarder: 192.168.122.1
+ipaserver_dns_forwarder: 10.10.10.2
 
-ipaserver_domain: ipa.example
+#ipaserver_domain: ipa.example
+ipaserver_domain: jump.example.com
 ipaserver_hbac_allow: True
 ipaserver_idstart: 5000
 ipaserver_idmax: False
@@ -20,7 +22,7 @@ ipaserver_packages:
 ipaclient_packages:
   - freeipa-client
 
-#Lame but CentOS have ipa-server instead of freeipa
+# in Case its RHEL/CentOS
 centos_ipaserver_packages:
   - ipa-server
   - bind

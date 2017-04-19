@@ -8,7 +8,7 @@
 - name: Install FreeIPA client packages (yum/ Centos)
   package: name={{ item }} state=present
   with_items: "{{ centos_ipaclient_packages }}"
-  when: ansible_distribution == "CentOS" 
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
 - name: Install FreeIPA client packages (apt-get)
   apt: name={{ item }} state=present update_cache=yes

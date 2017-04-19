@@ -1,14 +1,16 @@
 ---
 
 - hosts: all
-  remote_user: vagrant
+#  remote_user: vagrant
+  remote_user: root
   become: yes
   roles:
   - common
 
 - name: Install FreeIPA role
   hosts: freeipa_masters
-  remote_user: vagrant
+#  remote_user: vagrant
+  remote_user: root
   become: yes
   roles:
      - ipaserver
@@ -16,14 +18,16 @@
 
 - name: Enroll FreeIPA clients
   hosts: freeipa_clients
-  remote_user: vagrant
+#  remote_user: vagrant
+  remote_user: root
   become: yes
   roles:
      - ipaclient
 
 - name: Install Aker 
   hosts: aker_servers
-  remote_user: vagrant
+  remote_user: root
+#  remote_user: vagrant
   become: yes
   roles:
      - aker
