@@ -2,7 +2,6 @@ git_branch: phase0
 
 # User that doesn't have aker shell forced to it, should have sudo access.
 aker_admin_user: vagrant
-#aker_admin_user: root
 
 akerserver_packages:
   - git-core
