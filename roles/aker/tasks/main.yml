@@ -21,9 +21,18 @@
     dest: /bin/aker
     version: "{{ git_branch }}"
 
-
+- name: create Aker log dir
+  file:
+    path: /etc/aker/
+    state: directory
+    mode: 0755
+    
 - name: Copy Aker config
-  copy: remote_src=True src=/bin/aker/aker.ini dest=/etc/aker.ini
+  copy: remote_src=True src=/bin/aker/aker.ini dest=/etc/aker/aker.ini
+
+- name: Copy Aker hosts json config
+  copy: remote_src=True src=/bin/aker/hosts.json dest=/etc/aker/hosts.json
+
 
 - name: Change aker.py attributes
   file:
@@ -64,6 +73,7 @@
     ignore_already_exists=true
   delegate_to: "{{ groups['freeipa_masters'][0] }}"
   ignore_errors: True
+  when: install_freeipa
 
 
 - name: Add Aker servers to {{ aker_hostgroup }} FreeIPA hostgroup
@@ -74,11 +84,12 @@
     ignore_already_exists=true
   delegate_to: "{{ groups['freeipa_masters'][0] }}"
   ignore_errors: True
+  when: install_freeipa
 
 
-- name: Configure hostgroup {{ aker_hostgroup }} in /etc/aker.ini
+- name: Configure hostgroup {{ aker_hostgroup }} in /etc/aker/aker.ini
   lineinfile:
-    dest: /etc/aker.ini
+    dest: /etc/aker/aker.ini
     regexp: '^gateway_group ='
     line: 'gateway_group = {{ aker_hostgroup }}'
     
@@ -99,6 +110,11 @@
 - name: Restart sshd
   service: name=sshd state=restarted
 
+- name: Start redis
+  service: name=redis state=started
+
+- name: Enable redis
+  service: name=redis enabled=yes
     
 - include: sample_env.yml
-  when: aker_load_sample_env
+  when: aker_load_sample_env and install_freeipa

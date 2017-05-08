@@ -1,34 +1,46 @@
 ---
 
 - hosts: all
-#  remote_user: vagrant
-  remote_user: root
+  remote_user: vagrant
+#  remote_user: root
   become: yes
   roles:
   - common
 
 - name: Install FreeIPA role
   hosts: freeipa_masters
-#  remote_user: vagrant
-  remote_user: root
+  remote_user: vagrant
+#  remote_user: root
   become: yes
   roles:
-     - ipaserver
+     - {role: ipaserver, when: install_freeipa }
 
 
 - name: Enroll FreeIPA clients
   hosts: freeipa_clients
-#  remote_user: vagrant
-  remote_user: root
+  remote_user: vagrant
+#  remote_user: root
   become: yes
   roles:
-     - ipaclient
+     - {role: ipaclient, when: install_freeipa }
+
+- name: install Elasticsearch
+  hosts: elk_servers
+  remote_user: vagrant
+#  remote_user: root
+  become: yes
+  roles:
+    - {role: elasticsearch, when: install_elasticsearch }
+    - {role: logstash, when: install_elasticsearch }
+    - {role: nginx, when: install_elasticsearch }
+    - {role: kibana, when: install_elasticsearch }
 
 - name: Install Aker 
   hosts: aker_servers
-  remote_user: root
-#  remote_user: vagrant
+#  remote_user: root
+  remote_user: vagrant
   become: yes
   roles:
-     - aker
+     - {role: filebeat, when: install_elasticsearch }
+     - {role: aker}
 

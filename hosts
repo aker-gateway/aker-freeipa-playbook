@@ -8,6 +8,7 @@ web2.ipa.example
 db1.ipa.example
 db2.ipa.example
 
+
 [aker_servers]
 aker.ipa.example
 
@@ -15,3 +16,5 @@ aker.ipa.example
 db1.ipa.example
 db2.ipa.example
 
+[elk_servers]
+elasticsearch.ipa.example

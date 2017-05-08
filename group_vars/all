@@ -2,12 +2,18 @@ ipaserver_base_command: ipa-server-install -U
 ipaserver_configure_ssh: True
 ipaserver_configure_sshd: True
 
-# IP of DNS server that will go in /etc/resolv.conf
-#ipaserver_dns_forwarder: 192.168.122.1
-ipaserver_dns_forwarder: 10.10.10.2
+# Install Elasticsearch
+install_elasticsearch: True
 
-#ipaserver_domain: ipa.example
-ipaserver_domain: jump.example.com
+# Install FreeIPA
+install_freeipa: True
+
+# IP of DNS server that will go in /etc/resolv.conf
+ipaserver_dns_forwarder: 192.168.122.1
+#ipaserver_dns_forwarder: 10.10.10.2
+
+ipaserver_domain: ipa.example
+#ipaserver_domain: jump.example.com
 ipaserver_hbac_allow: True
 ipaserver_idstart: 5000
 ipaserver_idmax: False
@@ -45,3 +51,37 @@ ipaserver_admin_password: Secret123
 
 # FreeIPA hostgroup of Aker servers
 aker_hostgroup: gateways
+
+
+# port filebeat client grabs the client SSL certificate from
+elk_server_ssl_cert_port: 8080
+
+
+## elasticsearch local port listener
+# general usage will not need elasticsearch listening
+# outside of localhost, if you want to apply firewall rules
+# to allow external connections to elasticsearch change the below setting
+# to true
+# we will set this to false by default
+es_local_port: 9200
+es_listen_external: false
+
+
+### rsyslog options
+# set this to true if you want to accept
+# external syslog traffic
+syslog_listen_external: false
+
+# usage: port nginx listens to reverse-proxy Kibana
+# default is 80
+# e.g. 8888
+nginx_kibana_port: 80
+
+
+# Kibana options
+# change this to affect nginx-wrapped htpasswd authentication
+kibana_user: admin
+kibana_password: admin
+
+### logstash options ###
+logstash_syslog_port: 5044

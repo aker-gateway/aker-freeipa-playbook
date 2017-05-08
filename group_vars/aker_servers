@@ -1,15 +1,17 @@
 git_branch: phase0
 
 # User that doesn't have aker shell forced to it, should have sudo access.
-#aker_admin_user: vagrant
-aker_admin_user: root
+aker_admin_user: vagrant
+#aker_admin_user: root
 
 akerserver_packages:
   - git-core
-  - python2-paramiko
+  - python2-paramiko 
   - python2-configparser
   - python-urwid
   - python2-wcwidth.noarch
+  - python-redis.noarch
+  - redis
   
 # Add sample rules and users to FreeIPA
 aker_load_sample_env: True

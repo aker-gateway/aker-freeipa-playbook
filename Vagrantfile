@@ -37,6 +37,21 @@ Vagrant.configure("2") do |config|
         node.vm.provision :shell, :inline => "sudo hostnamectl set-hostname master1.#{DOMAIN}"
     end
 
+  # create elasticsearch vm
+  # https://docs.vagrantup.com/v2/vagrantfile/tips.html
+    config.vm.define "elastic" do |node|
+        node.vm.box = "anazmy/freeipa-client"
+        node.vm.hostname = "elasticsearch.#{DOMAIN}"
+        node.vm.network "private_network", ip: "192.168.122.50", auto_config: "false"
+        node.vm.synced_folder ".", "/vagrant", disabled: true
+        node.vm.provider "libvirt" do |libvirt|
+          libvirt.memory = 4096
+          libvirt.cpu_mode = "host-passthrough"
+        end
+	node.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/me.pub"
+        node.vm.provision "shell", inline: "cat ~vagrant/.ssh/me.pub >> ~vagrant/.ssh/authorized_keys"
+        node.vm.provision :shell, :inline => "sudo hostnamectl set-hostname elasticsearch.#{DOMAIN}"
+    end
 
   # create some freeipa clients
   (1..2).each do |i|

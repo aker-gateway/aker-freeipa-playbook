@@ -1,13 +1,10 @@
 ---
 
-- name: Check if Haveged Service Exists
-  stat: path=/usr/lib/systemd/system/haveged.service
-  register: haveged_status
+- name: Install Haveged 
+  package: name=haveged state=present
 
 - name: Start Haveged Service
   service: name=haveged state=restarted enabled=yes
-  when: haveged_status.stat.exists
-  register: haveged_started
 
 - name: Install python bindings for SE Linux
   package: name={{ item }} state=present
