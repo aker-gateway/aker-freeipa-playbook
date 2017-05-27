@@ -9,30 +9,30 @@
   * Logstash
   
   Clone this repo to your ansible master machine and declare your hosts in `hosts` file
- ```
-[freeipa_masters] # FreeIPA server (Optional)
-master1.ipa.example 
+   ```
+  [freeipa_masters] # FreeIPA server (Optional)
+  master1.ipa.example 
 
-[freeipa_clients] # FreeIPA Clients
-aker.ipa.example
-web1.ipa.example
-web2.ipa.example
-db1.ipa.example
-db2.ipa.example
+  [freeipa_clients] # FreeIPA Clients
+  aker.ipa.example
+  web1.ipa.example
+  web2.ipa.example
+  db1.ipa.example
+  db2.ipa.example
 
 
-[aker_servers] # Aker server
-aker.ipa.example
+  [aker_servers] # Aker server
+  aker.ipa.example
 
-[db_servers] # Optional for the sample demo environment 
-db1.ipa.example
-db2.ipa.example
+  [db_servers] # Optional for the sample demo environment 
+  db1.ipa.example
+  db2.ipa.example
 
-[elk_servers] # Elasticsearch server
-elasticsearch.ipa.example
+  [elk_servers] # Elasticsearch server
+  elasticsearch.ipa.example
   ```
   
-  Now you to install you have several options :
+  Now to start the install you have several options :
   
  * **install_freeipa** (default true) , this will install and configure FreeIPA server and clients .
  
