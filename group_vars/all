@@ -1,6 +1,3 @@
-ipaserver_base_command: ipa-server-install -U 
-ipaserver_configure_ssh: True
-ipaserver_configure_sshd: True
 
 # Install Elasticsearch
 install_elasticsearch: True
@@ -8,12 +5,30 @@ install_elasticsearch: True
 # Install FreeIPA
 install_freeipa: True
 
-# IP of DNS server that will go in /etc/resolv.conf
-ipaserver_dns_forwarder: 192.168.122.1
-#ipaserver_dns_forwarder: 10.10.10.2
+# DNS server to be added in /etc/resolv.conf
+dns: 192.168.122.1
 
+
+#FreeIPA admin passsword
+ipaserver_dir_admin_password: Secret123
+ipaserver_admin_password: Secret123
+
+# FreeIPA domain/realm
 ipaserver_domain: ipa.example
-#ipaserver_domain: jump.example.com
+
+# Manage firewalld
+ipaserver_manage_firewalld: True
+
+# Add sample rules and users to FreeIPA or Json
+aker_load_sample_env: True
+
+# Identity Provider , default to IPA
+aker_idp: IPA
+
+# User that doesn't have aker shell forced to it, should have sudo access.
+aker_admin_user: vagrant
+
+#####################################################
 ipaserver_hbac_allow: True
 ipaserver_idstart: 5000
 ipaserver_idmax: False
@@ -24,7 +39,15 @@ ipaserver_packages:
   - bind
   - bind-dyndb-ldap
   - freeipa-server-dns
+  - firewalld
 
+ubuntu_ipaserver_packages:
+  - freeipa-server
+  - bind9
+  - bind9-dyndb-ldap
+  - freeipa-server-dns
+
+  
 ipaclient_packages:
   - freeipa-client
 
@@ -34,20 +57,23 @@ centos_ipaserver_packages:
   - bind
   - bind-dyndb-ldap
   - ipa-server-dns
+  - firewalld
+  
+  
 centos_ipaclient_packages:
   - ipa-client
 
 ubuntu_ipaclient_packages:
   - freeipa-client
   - sssd-tools
+  
 ipaserver_realm: "{{ ipaserver_domain | upper }}"
 ipaserver_setup_dns: True
 ipaserver_setup_ntp: True
 ipaserver_ssh_trust_dns: True
 ipaserver_ui_redirect: True
-ipaserver_manage_firewalld: True
-ipaserver_dir_admin_password: Secret123
-ipaserver_admin_password: Secret123
+
+
 
 # FreeIPA hostgroup of Aker servers
 aker_hostgroup: gateways
@@ -85,3 +111,22 @@ kibana_password: admin
 
 ### logstash options ###
 logstash_syslog_port: 5044
+
+
+ipaserver_base_command: ipa-server-install -U 
+ipaserver_configure_ssh: True
+ipaserver_configure_sshd: True
+
+#Ubuntu apt details
+es_apt_key: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+es_apt_url: "deb https://artifacts.elastic.co/packages/5.x/apt stable main"
+
+
+epel_release:
+  "4": 10
+  "5": 4
+  "6": 8
+  "7": 9
+
+epel_repo_url: "http://download.fedoraproject.org/pub/epel/{{ ansible_distribution_major_version }}/{{ ansible_userspace_architecture }}{{ '/' if ansible_distribution_major_version < '7' else '/e/' }}epel-release-{{ ansible_distribution_major_version }}-{{ epel_release[ansible_distribution_major_version] }}.noarch.rpm"
+epel_repo_gpg_key_path: "/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}"

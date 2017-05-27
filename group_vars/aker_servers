@@ -1,8 +1,5 @@
 git_branch: phase0
 
-# User that doesn't have aker shell forced to it, should have sudo access.
-aker_admin_user: vagrant
-
 akerserver_packages:
   - git-core
   - python2-paramiko 
@@ -11,9 +8,15 @@ akerserver_packages:
   - python2-wcwidth.noarch
   - python-redis.noarch
   - redis
-  
-# Add sample rules and users to FreeIPA
-aker_load_sample_env: True
+
+ubuntu_akerserver_packages:
+  - git-core
+  - python-paramiko 
+  - python-configparser
+  - python-urwid
+  - python-wcwidth
+  - python-redis
+  - redis-server
 
 # allow PasswordAuthentication in sshd_config , just for vagrant test env.
 aker_password_auth: True

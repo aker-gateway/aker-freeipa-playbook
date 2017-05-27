@@ -1,3 +1,6 @@
 ---
 - name: reload firewalld
   command: firewall-cmd --reload
+  
+- name: restart ufw
+  service: name=ufw state=restarted  

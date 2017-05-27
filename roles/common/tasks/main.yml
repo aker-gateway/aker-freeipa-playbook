@@ -1,5 +1,17 @@
 ---
 
+- name: install epel repo
+  yum:
+    name: "{{ epel_repo_url }}"
+    state: present
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+- name: import epel gpg key
+  rpm_key:
+    key: "{{ epel_repo_gpg_key_path }}"
+    state: present
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+     
 - name: Install Haveged 
   package: name=haveged state=present
 
@@ -18,9 +30,9 @@
 
 - name: Install ntp 
   package: name=ntp state=latest
-
+  
 - name: Add dns resolver
-  lineinfile: dest=/etc/resolv.conf state=present line="nameserver {{ ipaserver_dns_forwarder }}" insertbefore=BOF  
+  lineinfile: dest=/etc/resolv.conf state=present line="nameserver {{ dns }}" insertbefore=BOF  
 
 #- name: Get nmcli device info
   #shell:

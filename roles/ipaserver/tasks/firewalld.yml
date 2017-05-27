@@ -2,12 +2,13 @@
 #firewalld doesn't exist on AWS CentOS 7 by default
 - name: Make sure firewalld is installed
   yum: name=firewalld state=present
-  when: ansible_os_family == "RedHat"
+  
 
 #The firewalld ruleset configuration will fail
 #unless we start firewalld
 - name: Enable and start firewalld
   service: name=firewalld state=started enabled=yes
+
   
 - name: Enable firewall ports
   firewalld: service={{ item }} permanent=true state=enabled
@@ -27,4 +28,5 @@
     - kerberos
     - dns
   notify: reload firewalld
-  #when: ansible_distribution != "Fedora" and ansible_os_family == "RedHat"
+
+

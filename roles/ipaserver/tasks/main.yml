@@ -2,7 +2,14 @@
 - name: Hard set the hostname
   hostname: name={{ ansible_fqdn }}
 
-- name: Add hosts entry
+
+- name: Remove localhost entry
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.0\.1.*{{ ansible_fqdn }}.*$'
+    state: absent
+    
+- name: Add /etc/hosts entry
   lineinfile:
     dest=/etc/hosts
     regexp=" {{ ansible_hostname }} "
@@ -25,6 +32,11 @@
   package: name={{ item }} state=present
   with_items: "{{ centos_ipaserver_packages }}"
   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+  
+- name: Install FreeIPA server packages (apt-get)
+  apt: name={{ item }} state=present update_cache=yes
+  with_items: "{{ ubuntu_ipaserver_packages }}"
+  when: ansible_distribution == "Ubuntu"
     
 - name: Install FreeIPA server (takes 5-7 mins)
   action: command
@@ -37,8 +49,8 @@
     --ip-address={{ ansible_default_ipv4.address }}
     {{ '--idstart=%s' % ipaserver_idstart if ipaserver_idstart | default(False) else '' }}
     {{ '--idmax=%s' % ipaserver_idmax if ipaserver_idmax | default(False) else '' }}
-    {{ '--forwarder=%s' % ipaserver_dns_forwarder
-       if ipaserver_dns_forwarder | default(False) else '--no-forwarders' }}
+    {{ '--forwarder=%s' % dns
+       if dns | default(False) else '--no-forwarders' }}
     {{ '--mkhomedir' if ipaserver_mkhomedir | default(True) else '' }}
     {{ '--setup-dns' if ipaserver_setup_dns | default(True) else '' }}
     {{ '--ssh-trust-dns' if ipaserver_ssh_trust_dns | default(True) else '' }}
@@ -58,4 +70,11 @@
   ignore_errors: True
   
 - include: firewalld.yml
-  when: ipaserver_manage_firewalld
+  when: 
+    - ipaserver_manage_firewalld == True
+    - ansible_os_family == "RedHat"
+
+- include: ufw.yml
+  when: 
+    - ipaserver_manage_firewalld == True
+    - ansible_distribution == "Ubuntu"

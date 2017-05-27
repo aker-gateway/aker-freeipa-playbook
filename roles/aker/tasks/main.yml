@@ -11,6 +11,10 @@
   when: ansible_distribution == "Fedora" and ansible_distribution_version|int > 21
 
 
+- name: Install Aker dependencies (apt-get)
+  apt: name={{ item }} state=present update_cache=yes
+  with_items: "{{ ubuntu_akerserver_packages }}"
+  when: ansible_distribution == "Ubuntu"
 
 - name: clean existing Aker files
   file: path=/bin/aker state=absent
@@ -92,7 +96,15 @@
     dest: /etc/aker/aker.ini
     regexp: '^gateway_group ='
     line: 'gateway_group = {{ aker_hostgroup }}'
+
+
+- name: Configure Identity provider {{ aker_idp }} in /etc/aker/aker.ini
+  lineinfile:
+    dest: /etc/aker/aker.ini
+    regexp: '^idp ='
+    line: 'idp = {{ aker_idp }}'
     
+        
 - name: Allow PasswordAuthentication in sshd_config
   lineinfile:
     dest: /etc/ssh/sshd_config
@@ -116,5 +128,12 @@
 - name: Enable redis
   service: name=redis enabled=yes
     
+- include: json_sample_env.yml
+  when: 
+    - aker_load_sample_env|bool == True
+    - install_freeipa|bool == False
+
 - include: sample_env.yml
-  when: aker_load_sample_env and install_freeipa
+  when: 
+    - aker_load_sample_env|bool == True
+    - install_freeipa|bool == True

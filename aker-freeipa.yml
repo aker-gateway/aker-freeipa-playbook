@@ -1,5 +1,5 @@
 ---
-
+     
 - hosts: all
   remote_user: vagrant
 #  remote_user: root
@@ -7,6 +7,7 @@
   roles:
   - common
 
+    
 - name: Install FreeIPA role
   hosts: freeipa_masters
   remote_user: vagrant
@@ -18,6 +19,8 @@
 
 - name: Enroll FreeIPA clients
   hosts: freeipa_clients
+# Serial runs here to counter Ubuntu problem with mass freeipa client registiration 
+  serial: 1
   remote_user: vagrant
 #  remote_user: root
   become: yes
