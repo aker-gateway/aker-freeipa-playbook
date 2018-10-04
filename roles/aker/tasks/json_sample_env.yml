@@ -1,0 +1,55 @@
+---
+- name: Add the user 'anazmy' with password 'password'
+  user:
+    name: anazmy
+    comment: "Ahmed Nazmy"
+    password: "$6$UNI0rJP3F3C7iOcA$whjfZ0aO18BUJfdBLamSyh5q1rXQsw8UeAR.FNzBzeRfNBvxx1DPnf4J5aHgBU3cf1irkfNT1KT.khS9I63W50"
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['freeipa_clients'] }}"
+
+
+- name: Add the user 'jsmith' with password 'password'
+  user:
+    name: jsmith
+    comment: "John Smith"
+    password: "$6$T3f6FZVf3ECccGi/$igCuPWHupqBMoRhMI3zRzyVBdO.MEY/DyBNQ8zgu4tGchuxhemWJDYhViZqQmUoENEYbLeCRXJ7sLrK6fxeW9/"
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['freeipa_clients'] }}"
+  
+  
+- name: Generate sshkey for anazmy
+  user: name=anazmy generate_ssh_key=yes
+
+
+- name: get anazmy id_rsa.pub
+  shell: cat /home/anazmy/.ssh/id_rsa.pub
+  register: anazmy_id_rsa_pub
+  changed_when: false
+
+- name: Generate sshkey for jsmith 
+  user: name=jsmith generate_ssh_key=yes
+
+- name: get jsmith id_rsa.pub
+  shell: cat /home/jsmith/.ssh/id_rsa.pub
+  register: jsmith_id_rsa_pub
+  changed_when: false
+
+
+- name: deploy anazmy sshkey on all servers
+  authorized_key: user=anazmy key="{{ anazmy_id_rsa_pub.stdout }}"
+  delegate_to: "{{ item }}"
+  with_items:
+    - web1.ipa.example
+    - web2.ipa.example
+    - db1.ipa.example
+    - db2.ipa.example
+
+      
+- name: deploy anazmy sshkey on all servers
+  authorized_key: user=jsmith key="{{ jsmith_id_rsa_pub.stdout }}"
+  delegate_to: "{{ item }}"
+  with_items:
+    - web1.ipa.example
+    - web2.ipa.example
+    - db1.ipa.example
+    - db2.ipa.example
