@@ -1,0 +1,77 @@
+---
+#
+# Install/run logstash
+#
+
+- name: Ubuntu - Add logstash  repository key
+  apt_key: url="{{ es_apt_key }}" state=present
+
+- name: Ubuntu - Add logstash repository
+  apt_repository: repo={{ es_apt_url }} state=present
+
+
+- name: Ubuntu - Install logstash
+  apt: name={{ item }} state=present
+  become: true
+  with_items:
+    - logstash
+
+- name: Copy logstash filter configuration
+  template:
+    src=logstash.conf.j2
+    dest=/etc/logstash/conf.d/logstash.conf
+    owner=logstash
+    group=logstash
+    mode=0644
+  become: true
+
+- name: Load OpenSSL CA Extended Configuration
+  template:
+    src=openssl_extras.cnf.j2
+    dest=/etc/ssl/openssl_extras.cnf
+    owner=root
+    group=root
+    mode=0644
+  become: true
+
+- name: Check OpenSSL SANs (SubjectAltName) entry for CA
+  shell: grep "{{ ansible_default_ipv4.address }}" /etc/ssl/openssl.cnf | wc -l
+  ignore_errors: true
+  register: subjectAltName_exists
+  tags:
+    # Skip ANSIBLE0012 Commands should not change things if nothing needs doing
+    # Need to understand if an entry exists
+    - skip_ansible_lint
+
+- name: Add OpenSSL SANs (SubjectAltName) entry for CA
+  lineinfile:
+    dest: /etc/ssl/openssl.cnf
+    line: 'subjectAltName = "{{ ansible_default_ipv4.address }}"'
+    regexp: '^ Extensions for a typical CA'
+    insertbefore: '# Extensions for a typical CA'
+    backup: yes
+  when: subjectAltName_exists.stdout|int == 0
+
+- name: Load filebeat JSON index template
+  uri:
+    url: http://localhost:9200/_template/filebeat?pretty
+    method: POST
+    body: "{{ lookup('file', 'filebeat-index-template.json') }}"
+    body_format: json
+  ignore_errors: true
+  become: true
+
+
+- name: Configure ufw rules for TCP/{{logstash_syslog_port}}
+  ufw: rule=allow port={{logstash_syslog_port}} proto=tcp
+  register: ufw_needs_restart
+
+- name: Restart ufw 
+  service: name=ufw state=restarted  
+  ignore_errors: true
+  when: ufw_needs_restart
+  tags:
+    # Skip ANSIBLE0013 Use shell only when shell functionality is required
+    # No systemctl module available in current stable release (Ansible 2.1)
+    - skip_ansible_lint
+

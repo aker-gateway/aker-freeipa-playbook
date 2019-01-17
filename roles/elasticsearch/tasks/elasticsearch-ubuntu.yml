@@ -1,0 +1,74 @@
+---
+#
+# Install/run elasticsearch
+#
+
+- name: Ubuntu - Install apt-transport-https to support https APT downloads
+  apt: name=apt-transport-https state=present
+
+- name: Ubuntu - Add Elasticsearch repository key
+  apt_key: url="{{ es_apt_key }}" state=present
+
+- name: Ubuntu - Add elasticsearch repository
+  apt_repository: repo={{ es_apt_url }} state=present
+  
+- name: Ubuntu - Install elasticsearch and openjdk
+  apt: name={{ item }} state=present
+  become: true
+  with_items:
+    - elasticsearch
+    - openjdk-8-jre-headless
+
+- name: Check if system memory is greater than 64G
+  debug: msg="System memory is {{ansible_memory_mb.real.total | int}} so setting heapsize to 32G upper limit"
+  when: ansible_memory_mb.real.total|int >= 65536
+
+- name: Apply heapsize tuning for systems with greater than 64G memory
+  lineinfile: dest=/usr/share/elasticsearch/bin/elasticsearch.in.sh \
+          line="ES_HEAP_SIZE=32g" insertafter="^ES_CLASSPATH="
+  when: ansible_memory_mb.real.total|int >= 65536
+  register: elasticsearch_updated
+
+- name: Print extended documentation for heapsize tuning
+  debug: msg="Refer to https://www.elastic.co/guide/en/elasticsearch/guide/current/_limiting_memory_usage.html"
+  when: ansible_memory_mb.real.total|int >= 65536
+
+- name: Update elasticsearch startup with heap size
+  become: true
+  lineinfile: dest=/usr/share/elasticsearch/bin/elasticsearch.in.sh \
+          line="ES_HEAP_SIZE={{ (ansible_memory_mb.real.total / 2) | int }}m" insertafter="^ES_CLASSPATH="
+  when: ansible_memory_mb.real.total|int < 65536
+  register: elasticsearch_updated
+
+- name: Apply workaround for java listening port
+  raw: setcap 'cap_net_bind_service=+ep' /usr/lib/jvm/java-1.8.*openjdk-*/jre/bin/java
+
+# https://www.centos.org/forums/viewtopic.php?t=16398, FIXME
+- name: Apply symlink workaround for libjli.so
+  file:
+    src='/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/jli/libjli.so'
+    dest='/lib64/libjli.so'
+    state=link
+
+
+- name: Configure ufw rules for TCP/{{es_local_port}} 
+  ufw: rule=allow port={{es_local_port}} proto=tcp
+  register: ufw_needs_restart
+
+- name: Restart ufw 
+  service: name=ufw state=restarted  
+  ignore_errors: true
+  when: ufw_needs_restart
+  tags:
+    # Skip ANSIBLE0013 Use shell only when shell functionality is required
+    # No systemctl module available in current stable release (Ansible 2.1)
+    - skip_ansible_lint
+
+- name: Start elasticsearch service
+  command: systemctl start elasticsearch.service
+  ignore_errors: true
+  when: elasticsearch_updated != 0
+
+- name: Setup elasticsearch service
+  service: name=elasticsearch state=started enabled=true
+  become: true
