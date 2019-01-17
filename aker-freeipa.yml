@@ -3,6 +3,7 @@
 - hosts: all
   remote_user: vagrant
 #  remote_user: root
+  serial: 1
   become: yes
   roles:
   - common
